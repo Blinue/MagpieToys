@@ -19,6 +19,12 @@ float inputPtY;
 //!MIN 0
 float sharpness;
 
+//!CONSTANT
+//!DEFAULT 0.1
+//!MIN 0
+//!MAX 1
+float threshold;
+
 //!TEXTURE
 Texture2D INPUT;
 
@@ -63,7 +69,11 @@ float4 Pass1(float2 pos) {
 	float br = getY(INPUT.Sample(sam, pos + float2(inputPtX, inputPtY)));
 	
 	float blurred = (tl + 2 * tc + tr + 2 * ml + 4 * mc + 2 * mr + bl + 2 * bc + br) / 16;
-
-	curYuv.x = saturate(curYuv.x + (curYuv.x - blurred) * sharpness);
+	
+	float dif = curYuv.x - blurred;
+	if(dif > threshold) {
+		curYuv.x = saturate(curYuv.x + dif * sharpness);
+	}
+	
 	return float4(mul(_yuv2rgb, curYuv - float3(0, 0.5, 0.5)), 1);
 }
