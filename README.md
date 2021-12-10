@@ -1,0 +1,2 @@
+# MagpieToys
+Useless Magpie effects
