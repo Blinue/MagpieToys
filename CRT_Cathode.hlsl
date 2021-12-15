@@ -41,10 +41,6 @@ float inputHeight;
 //!VALUE OUTPUT_WIDTH
 float outputWidth;
 
-//!CONSTANT
-//!VALUE OUTPUT_HEIGHT
-float outputHeight;
-
 //!TEXTURE
 Texture2D INPUT;
 
@@ -85,7 +81,7 @@ float4 Pass1(float2 pos) {
 		[unroll]
 		for (int j = -2; j <= 2; j++) {
 			float2 tap = floor(p) + 0.5 + float2(i, j);
-			float3 rez = INPUT.Sample(sam, tap / float2(inputWidth, inputHeight)).rgb; //nearest neighbor
+			float3 rez = INPUT.Sample(sam, tap * float2(inputPtX, inputPtY)).rgb; //nearest neighbor
         
 			//center points
 			float rd = sqd(tap, p + float2(0.0, 0.2)); //distance to red dot
