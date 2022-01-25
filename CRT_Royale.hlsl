@@ -43,7 +43,7 @@ float inputPtY;
 float outputWidth;
 
 //!CONSTANT
-//!VALUE OUTPUT_WIDTH
+//!VALUE OUTPUT_HEIGHT
 float outputHeight;
 
 //!CONSTANT
@@ -83,7 +83,7 @@ float levels_contrast;
 float halation_weight;
 
 //!CONSTANT
-//!DEFAULT 0.08
+//!DEFAULT 0.075
 //!MIN 0
 //!MAX 1
 float diffusion_weight;
@@ -2167,7 +2167,7 @@ float4 Pass11(float2 pos) {
 		brightpass_tex_uv).rgb;
 	const float3 dimpass = intensity_dim - brightpass;
 	const float3 phosphor_bloom = (dimpass + blurred_brightpass) *
-		mask_amplify * undim_factor * levels_contrast * 0.8;
+		mask_amplify * undim_factor * levels_contrast;
 
 	//  Sample the halation texture, and let some light bleed into refractive
 	//  diffusion.  Conceptually this occurs before the phosphor bloom, but
