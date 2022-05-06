@@ -25,58 +25,34 @@
 
 
 //!MAGPIE EFFECT
-//!VERSION 1
+//!VERSION 2
 
 
-//!CONSTANT
-//!VALUE INPUT_PT_X
-float inputPtX;
-
-//!CONSTANT
-//!VALUE INPUT_PT_Y
-float inputPtY;
-
-//!CONSTANT
-//!VALUE INPUT_WIDTH
-float inputWidth;
-
-//!CONSTANT
-//!VALUE INPUT_HEIGHT
-float inputHeight;
-
-//!CONSTANT
-//!VALUE OUTPUT_WIDTH
-float outputWidth;
-
-//!CONSTANT
-//!VALUE OUTPUT_HEIGHT
-float outputHeight;
-
-//!CONSTANT
+//!PARAMETER
 //!DEFAULT 0.5
 //!MIN 0.1
 //!MAX 1.5
 float spotWidth;
 
-//!CONSTANT
+//!PARAMETER
 //!DEFAULT 0.5
 //!MIN 0.1
 //!MAX 1.5
 float spotHeight;
 
-//!CONSTANT
+//!PARAMETER
 //!DEFAULT 1.45
 //!MIN 1
 //!MAX 2
 float colorBoost;
 
-//!CONSTANT
+//!PARAMETER
 //!DEFAULT 2.4
 //!MIN 0
 //!MAX 5
 float inputGamma;
 
-//!CONSTANT
+//!PARAMETER
 //!DEFAULT 2.2
 //!MIN 0
 //!MAX 5
@@ -92,12 +68,13 @@ SamplerState sam;
 
 
 //!PASS 1
-//!BIND INPUT
+//!STYLE PS
+//!IN INPUT
 
 #define GAMMA_IN(color)     pow(color, inputGamma)
 #define GAMMA_OUT(color)    pow(color, 1.0 / outputGamma)
 
-#define TEX2D(coords)	GAMMA_IN( INPUT.Sample(sam, coords) )
+#define TEX2D(coords)	GAMMA_IN( INPUT.SampleLevel(sam, coords, 0) )
 
 // Macro for weights computing
 #define WEIGHT(w) \
@@ -106,66 +83,68 @@ SamplerState sam;
 	w = w * w;
 
 float4 Pass1(float2 pos) {
-    float2 onex = float2(1.0 / inputWidth, 0.0);
-    float2 oney = float2(0.0, 1.0 / inputHeight);
+	const float2 inputPt = GetInputPt();
 
-    float2 coords = (pos * float2(inputWidth, inputHeight));
-    float2 pixel_center = floor(coords) + float2(0.5, 0.5);
-    float2 texture_coords = pixel_center / float2(inputWidth, inputHeight);
+	float2 onex = float2(inputPt.x, 0.0);
+	float2 oney = float2(0.0, inputPt.y);
 
-    float4 color = TEX2D(texture_coords);
+	float2 coords = pos * GetInputSize();
+	float2 pixel_center = floor(coords) + 0.5f;
+	float2 texture_coords = pixel_center * inputPt;
 
-    float dx = coords.x - pixel_center.x;
+	float4 color = TEX2D(texture_coords);
 
-    float h_weight_00 = dx / spotWidth;
-    WEIGHT(h_weight_00);
+	float dx = coords.x - pixel_center.x;
 
-    color *= h_weight_00;
+	float h_weight_00 = dx / spotWidth;
+	WEIGHT(h_weight_00);
 
-    // get closest horizontal neighbour to blend
-    float2 coords01;
-    if (dx > 0.0) {
-        coords01 = onex;
-        dx = 1.0 - dx;
-    } else {
-        coords01 = -onex;
-        dx = 1.0 + dx;
-    }
-    float4 colorNB = TEX2D(texture_coords + coords01);
+	color *= h_weight_00;
 
-    float h_weight_01 = dx / spotWidth;
-    WEIGHT(h_weight_01);
+	// get closest horizontal neighbour to blend
+	float2 coords01;
+	if (dx > 0.0) {
+		coords01 = onex;
+		dx = 1.0 - dx;
+	} else {
+		coords01 = -onex;
+		dx = 1.0 + dx;
+	}
+	float4 colorNB = TEX2D(texture_coords + coords01);
 
-    color = color + colorNB * h_weight_01;
+	float h_weight_01 = dx / spotWidth;
+	WEIGHT(h_weight_01);
 
-    //////////////////////////////////////////////////////
-    // Vertical Blending
-    float dy = coords.y - pixel_center.y;
-    float v_weight_00 = dy / spotHeight;
-    WEIGHT(v_weight_00);
-    color *= v_weight_00;
+	color = color + colorNB * h_weight_01;
 
-    // get closest vertical neighbour to blend
-    float2 coords10;
-    if (dy > 0.0) {
-        coords10 = oney;
-        dy = 1.0 - dy;
-    } else {
-        coords10 = -oney;
-        dy = 1.0 + dy;
-    }
-    colorNB = TEX2D(texture_coords + coords10);
+	//////////////////////////////////////////////////////
+	// Vertical Blending
+	float dy = coords.y - pixel_center.y;
+	float v_weight_00 = dy / spotHeight;
+	WEIGHT(v_weight_00);
+	color *= v_weight_00;
 
-    float v_weight_10 = dy / spotHeight;
-    WEIGHT(v_weight_10);
+	// get closest vertical neighbour to blend
+	float2 coords10;
+	if (dy > 0.0) {
+		coords10 = oney;
+		dy = 1.0 - dy;
+	} else {
+		coords10 = -oney;
+		dy = 1.0 + dy;
+	}
+	colorNB = TEX2D(texture_coords + coords10);
 
-    color += colorNB * v_weight_10 * h_weight_00;
+	float v_weight_10 = dy / spotHeight;
+	WEIGHT(v_weight_10);
 
-    colorNB = TEX2D(texture_coords + coords01 + coords10);
+	color += colorNB * v_weight_10 * h_weight_00;
 
-    color += colorNB * v_weight_10 * h_weight_01;
+	colorNB = TEX2D(texture_coords + coords01 + coords10);
 
-    color *= colorBoost;
+	color += colorNB * v_weight_10 * h_weight_01;
 
-    return clamp(GAMMA_OUT(color), 0.0, 1.0);
+	color *= colorBoost;
+
+	return clamp(GAMMA_OUT(color), 0.0, 1.0);
 }
