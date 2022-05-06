@@ -18,28 +18,8 @@
 */
 
 //!MAGPIE EFFECT
-//!VERSION 1
+//!VERSION 2
 
-
-//!CONSTANT
-//!VALUE INPUT_PT_X
-float inputPtX;
-
-//!CONSTANT
-//!VALUE INPUT_PT_Y
-float inputPtY;
-
-//!CONSTANT
-//!VALUE INPUT_WIDTH
-float inputWidth;
-
-//!CONSTANT
-//!VALUE INPUT_HEIGHT
-float inputHeight;
-
-//!CONSTANT
-//!VALUE OUTPUT_WIDTH
-float outputWidth;
 
 //!TEXTURE
 Texture2D INPUT;
@@ -50,7 +30,8 @@ SamplerState sam;
 
 
 //!PASS 1
-//!BIND INPUT
+//!STYLE PS
+//!IN INPUT
 
 //Phosphor decay
 float decay(in float d) {
@@ -67,33 +48,33 @@ float sqd(in float2 a, in float2 b) {
 }
 
 float4 Pass1(float2 pos) {
-	float2 p = pos * float2(inputWidth, inputHeight);
+	float2 p = pos * GetInputSize();
 
 	float3 col = 0;
 	p -= 0.25;
-	float gl_FragCoordX = pos.x * outputWidth;
+	float gl_FragCoordX = pos.x * GetOutputSize().x;
 	p.y += fmod(gl_FragCoordX, 2.) < 1. ? .03 : -0.03;
 	p.y += fmod(gl_FragCoordX, 4.) < 2. ? .02 : -0.02;
-    
+
 	//5x5 kernel (this means a given fragment can be affected by a pixel 4 game pixels away)
 	[unroll]
 	for (int i = -2; i <= 2; i++) {
 		[unroll]
 		for (int j = -2; j <= 2; j++) {
 			float2 tap = floor(p) + 0.5 + float2(i, j);
-			float3 rez = INPUT.Sample(sam, tap * float2(inputPtX, inputPtY)).rgb; //nearest neighbor
-        
+			float3 rez = INPUT.SampleLevel(sam, tap * GetInputPt(), 0).rgb; //nearest neighbor
+
 			//center points
 			float rd = sqd(tap, p + float2(0.0, 0.2)); //distance to red dot
 			const float xoff = .25;
 			float gd = sqd(tap, p + float2(xoff, .0)); //distance to green dot
 			float bd = sqd(tap, p + float2(-xoff, .0)); //distance to blue dot
-		
+
 			rez = pow(rez, 1.18) * 1.08;
 			rez.r *= decay(rd);
 			rez.g *= decay(gd);
 			rez.b *= decay(bd);
-		
+
 			col += rez;
 		}
 	}
