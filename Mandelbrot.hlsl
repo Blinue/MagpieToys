@@ -2,20 +2,12 @@
 // 移植自 https://www.shadertoy.com/view/sdKSD3
 
 //!MAGPIE EFFECT
-//!VERSION 1
-
-
-//!CONSTANT
-//!VALUE OUTPUT_WIDTH / OUTPUT_HEIGHT
-float ratio;
-
-//!CONSTANT
-//!DYNAMIC
-//!VALUE FRAME_COUNT
-int frameCount;
+//!VERSION 2
+//!USE_DYNAMIC
 
 
 //!PASS 1
+//!STYLE PS
 
 int mandelbrot(float2 c) {
 	float2 z = c;
@@ -33,9 +25,9 @@ float zoom(float t) {
 
 float4 Pass1(float2 pos) {
 	pos = pos * 2 - 1;
-	pos.x *= ratio;
+	pos.x *= (float)GetOutputSize().x / GetOutputSize().y;
 
-	float2 c = (pos * 2.0) * zoom(frameCount / 100.0f);
+	float2 c = (pos * 2.0) * zoom(GetFrameCount() / 100.0f);
 	c += float2(-1.253443441, 0.384693578);
 	float iters = float(mandelbrot(c));
 
