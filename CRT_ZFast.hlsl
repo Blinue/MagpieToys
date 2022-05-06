@@ -3,12 +3,12 @@
 // 只支持整数倍缩放
 
 /*
-    zfast_crt_standard - A simple, fast CRT shader.
-    Copyright (C) 2017 Greg Hogan (SoltanGris42)
-    This program is free software; you can redistribute it and/or modify it
-    under the terms of the GNU General Public License as published by the Free
-    Software Foundation; either version 2 of the License, or (at your option)
-    any later version.
+	zfast_crt_standard - A simple, fast CRT shader.
+	Copyright (C) 2017 Greg Hogan (SoltanGris42)
+	This program is free software; you can redistribute it and/or modify it
+	under the terms of the GNU General Public License as published by the Free
+	Software Foundation; either version 2 of the License, or (at your option)
+	any later version.
 Notes:  This shader does scaling with a weighted linear filter for adjustable
 	sharpness on the x and y axes based on the algorithm by Inigo Quilez here:
 	http://http://www.iquilezles.org/www/articles/texture/texture.htm
@@ -19,66 +19,46 @@ Notes:  This shader does scaling with a weighted linear filter for adjustable
 */
 
 //!MAGPIE EFFECT
-//!VERSION 1
+//!VERSION 2
 
 
-//!CONSTANT
-//!VALUE INPUT_PT_X
-float inputPtX;
-
-//!CONSTANT
-//!VALUE INPUT_PT_Y
-float inputPtY;
-
-//!CONSTANT
-//!VALUE INPUT_WIDTH
-float inputWidth;
-
-//!CONSTANT
-//!VALUE INPUT_HEIGHT
-float inputHeight;
-
-//!CONSTANT
-//!VALUE OUTPUT_WIDTH
-float outputWidth;
-
-//!CONSTANT
+//!PARAMETER
 //!DEFAULT 1
 //!MIN 0
 //!MAX 1
 int fineMask;
 
-//!CONSTANT
+//!PARAMETER
 //!DEFAULT 0.3
 //!MIN 0
 //!MAX 1
 float blurScaleX;
 
-//!CONSTANT
+//!PARAMETER
 //!DEFAULT 6
 //!MIN 0
 //!MAX 10
 float lowLumScan;
 
-//!CONSTANT
+//!PARAMETER
 //!DEFAULT 8
 //!MIN 0
 //!MAX 50
 float hiLumScan;
 
-//!CONSTANT
+//!PARAMETER
 //!DEFAULT 1.25
 //!MIN 0.5
 //!MAX 1.5
 float brightBoost;
 
-//!CONSTANT
+//!PARAMETER
 //!DEFAULT 0.25
 //!MIN 0
 //!MAX 1
 float maskDark;
 
-//!CONSTANT
+//!PARAMETER
 //!DEFAULT 0.8
 //!MIN 0
 //!MAX 1
@@ -94,31 +74,32 @@ SamplerState sam;
 
 
 //!PASS 1
-//!BIND INPUT
+//!STYLE PS
+//!IN INPUT
 
 float4 Pass1(float2 pos) {
 	//This is just like "Quilez Scaling" but sharper
-	float2 p = pos * float2(inputWidth, inputHeight);
+	float2 p = pos * GetInputSize();
 	float2 i = floor(p) + 0.50;
 	float2 f = p - i;
-	p = (i + 4.0 * f * f * f) * float2(inputPtX, inputPtY);
+	p = (i + 4.0 * f * f * f) * GetInputPt();
 	p.x = lerp(p.x, pos.x, blurScaleX);
 	float Y = f.y * f.y;
 	float YY = Y * Y;
-	
+
 	float whichmask;
 	float mask;
 
 	if (fineMask != 0) {
-		whichmask = frac(floor(pos.x * outputWidth) * -0.4999);
+		whichmask = frac(floor(pos.x * GetOutputSize().x) * -0.4999);
 		mask = 1.0 + float(whichmask < 0.5) * -maskDark;
 	} else {
-		whichmask = frac(floor(pos.x * outputWidth) * -0.3333);
+		whichmask = frac(floor(pos.x * GetOutputSize().x) * -0.3333);
 		mask = 1.0 + float(whichmask <= 0.33333) * -maskDark;
 	}
 
-	float3 colour = INPUT.Sample(sam, p).rgb;
-	
+	float3 colour = INPUT.SampleLevel(sam, p, 0).rgb;
+
 	float scanLineWeight = (brightBoost - lowLumScan * (Y - 2.05 * YY));
 	float scanLineWeightB = 1.0 - hiLumScan * (YY - 2.8 * YY * Y);
 
