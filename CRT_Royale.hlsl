@@ -1,5 +1,6 @@
 // CRT-Royale For Magpie
 // 移植自 https://github.com/libretro/common-shaders/tree/master/crt/shaders/crt-royale
+// 只适用于 MagpieFX v1
 // 
 // CRT-Royale 的许可声明：
 // crt-royale: A full-featured CRT shader, with cheese.
