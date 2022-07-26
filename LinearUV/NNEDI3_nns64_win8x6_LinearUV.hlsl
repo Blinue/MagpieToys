@@ -1,4 +1,4 @@
-// nnedi3-nns64-win8x6
+// nnedi3-nns64-win8x6，UV 通道使用双线性插值
 // 移植自 https://github.com/bjin/mpv-prescalers/blob/master/compute/nnedi3-nns64-win8x6.hook
 // 有半像素的偏移
 
