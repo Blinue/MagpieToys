@@ -612,7 +612,7 @@ void Pass6(uint2 blockStart, uint3 threadId) {
 				}
 			}
 
-			float2 originUV = mul(rgb2uv, INPUT.SampleLevel(sam1, (destPos + 0.5f) * outputPt , 0).rgb);
+			float2 originUV = mul(rgb2uv, INPUT.SampleLevel(sam1, (destPos + 0.5f) * outputPt, 0).rgb);
 			const uint index = i * 2 + j;
 			WriteToOutput(destPos, mul(yuv2rgb, float3(result[index], originUV)));
 		}
